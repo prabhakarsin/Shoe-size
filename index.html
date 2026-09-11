@@ -7,81 +7,86 @@
 <style>
   :root{
     --bg:#0F1115; --panel:#1A1D24; --border:#2A2E38;
-    --text:#EDEFF2; --muted:#8C97A8; --accent:#4C9AD8;
+    --text:#EDEFF2; --muted:#8C97A8; --accent:#4C9AD8; --card-dot:#4C9AD8; --foot-dot:#E1A24C;
   }
   *{box-sizing:border-box;}
   body{
     margin:0; background:var(--bg); color:var(--text);
     font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,sans-serif;
-    min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:24px 16px;
+    min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:20px 14px 40px;
   }
   .wrap{max-width:520px; width:100%;}
-  h1{font-size:22px; margin:0 0 6px;}
-  .sub{color:var(--muted); font-size:14px; margin-bottom:20px; line-height:1.5;}
+  h1{font-size:21px; margin:0 0 6px;}
+  .sub{color:var(--muted); font-size:13.5px; margin-bottom:16px; line-height:1.5;}
 
-  .steps{background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:16px 18px; margin-bottom:20px;}
-  .steps ol{margin:0; padding-left:20px; font-size:14px; line-height:1.7; color:var(--text);}
+  .steps{background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:14px 16px; margin-bottom:16px;}
+  .steps ol{margin:0; padding-left:20px; font-size:13.5px; line-height:1.65;}
   .steps b{color:var(--accent);}
 
   .capture-box{
-    border:2px dashed var(--border); border-radius:12px; padding:28px 16px;
-    text-align:center; margin-bottom:16px; background:var(--panel);
+    border:2px dashed var(--border); border-radius:12px; padding:22px 14px;
+    text-align:center; margin-bottom:14px; background:var(--panel);
   }
-  #preview{max-width:100%; border-radius:8px; margin-top:14px; display:none;}
-
   input[type="file"]{display:none;}
   label.btn, button{
     display:inline-block; background:var(--accent); color:#08111a; font-weight:600;
-    padding:12px 20px; border-radius:8px; cursor:pointer; border:none; font-size:14.5px;
+    padding:11px 18px; border-radius:8px; cursor:pointer; border:none; font-size:14px;
   }
-  button:disabled{opacity:0.5; cursor:not-allowed;}
+  button:disabled{opacity:0.45; cursor:not-allowed;}
   button.secondary{background:transparent; border:1px solid var(--border); color:var(--text);}
+
+  #canvasWrap{display:none; margin-top:14px; position:relative;}
+  canvas{width:100%; border-radius:8px; touch-action:none; display:block;}
+
+  #instruction{
+    font-size:14px; font-weight:600; text-align:center; margin-top:12px; min-height:20px;
+  }
+  #instruction.card{color:var(--card-dot);}
+  #instruction.foot{color:var(--foot-dot);}
 
   .actions{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:14px;}
 
-  #status{font-size:13.5px; color:var(--muted); text-align:center; margin:10px 0;}
   #error{
     display:none; background:#2A1518; border:1px solid #5A2A2E; color:#F0A8AC;
     border-radius:8px; padding:12px 14px; font-size:13.5px; margin-top:14px;
   }
 
   #results{display:none; margin-top:20px;}
-  .size-grid{
-    display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:14px;
-  }
-  .size-card{
-    background:var(--panel); border:1px solid var(--border); border-radius:10px;
-    padding:14px; text-align:center;
-  }
-  .size-card .label{font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em;}
-  .size-card .value{font-size:24px; font-weight:600; margin-top:4px;}
-  .disclaimer{font-size:12px; color:#5f6a7a; margin-top:18px; line-height:1.5;}
+  .size-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:12px;}
+  .size-card{background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:14px; text-align:center;}
+  .size-card .label{font-size:11.5px; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em;}
+  .size-card .value{font-size:23px; font-weight:600; margin-top:4px;}
+  .disclaimer{font-size:11.5px; color:#5f6a7a; margin-top:18px; line-height:1.5;}
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>Find your shoe size</h1>
-  <p class="sub">Take one photo and get your size estimate in cm, inches, UK, US, and EU.</p>
+  <p class="sub">Take a photo, then tap a few points on it. Everything runs on your device — no photo is uploaded anywhere.</p>
 
   <div class="steps">
     <ol>
       <li>Place a <b>credit or debit card flat</b> on the floor next to your foot (not overlapping it).</li>
-      <li>Put your foot flat next to it, on a <b>plain, well-lit surface</b> (a sheet of paper works well).</li>
-      <li>Photograph <b>straight down from directly above</b> — not at an angle.</li>
+      <li>Put your foot flat next to it on a plain surface, and photograph <b>straight down from above</b>.</li>
+      <li>After uploading, you'll tap the two ends of the card's long edge, then your heel and toe.</li>
     </ol>
   </div>
 
-  <div class="capture-box">
+  <div class="capture-box" id="captureBox">
     <label class="btn" for="fileInput">Take or choose a photo</label>
     <input type="file" id="fileInput" accept="image/*" capture="environment">
-    <img id="preview" alt="Preview of your photo">
-    <div class="actions" id="measureActions" style="display:none;">
-      <button id="measureBtn">Measure my foot</button>
-      <button class="secondary" id="retakeBtn">Retake</button>
-    </div>
   </div>
 
-  <div id="status"></div>
+  <div id="canvasWrap">
+    <canvas id="canvas"></canvas>
+  </div>
+  <div id="instruction"></div>
+
+  <div class="actions" id="actions" style="display:none;">
+    <button id="undoBtn" class="secondary">Undo last point</button>
+    <button id="retakeBtn" class="secondary">Retake photo</button>
+  </div>
+
   <div id="error"></div>
 
   <div id="results">
@@ -93,89 +98,197 @@
       <div class="size-card"><div class="label">US Women's</div><div class="value" id="resUsW">--</div></div>
       <div class="size-card"><div class="label">EU</div><div class="value" id="resEu">--</div></div>
     </div>
+    <div class="actions">
+      <button class="secondary" id="startOverBtn">Measure again</button>
+    </div>
   </div>
 
   <p class="disclaimer">
-    This is an estimate based on image analysis, not a precise fitting. Sizing conventions vary
-    by brand and shoe style — when in stock, check the specific brand's size chart before buying.
+    This is an estimate based on the points you mark, not a precise fitting. Sizing conventions vary
+    by brand and shoe style — check the specific brand's size chart before buying.
   </p>
 </div>
 
 <script>
+const CARD_WIDTH_CM = 8.56; // ISO/IEC 7810 ID-1 card long edge
+
 const fileInput = document.getElementById('fileInput');
-const preview = document.getElementById('preview');
-const measureActions = document.getElementById('measureActions');
-const measureBtn = document.getElementById('measureBtn');
+const captureBox = document.getElementById('captureBox');
+const canvasWrap = document.getElementById('canvasWrap');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const instruction = document.getElementById('instruction');
+const actionsEl = document.getElementById('actions');
+const undoBtn = document.getElementById('undoBtn');
 const retakeBtn = document.getElementById('retakeBtn');
-const statusEl = document.getElementById('status');
 const errorEl = document.getElementById('error');
 const resultsEl = document.getElementById('results');
+const startOverBtn = document.getElementById('startOverBtn');
 
-let currentBase64 = null;
+let img = new Image();
+let points = []; // up to 4: [card1, card2, heel, toe] in canvas coordinate space
+
+const STEP_LABELS = [
+  { text: 'Tap one end of the card\'s long edge', cls: 'card' },
+  { text: 'Tap the other end of the card\'s long edge', cls: 'card' },
+  { text: 'Tap your heel', cls: 'foot' },
+  { text: 'Tap your toe', cls: 'foot' },
+];
+
+function resetAll() {
+  points = [];
+  fileInput.value = '';
+  captureBox.style.display = 'block';
+  canvasWrap.style.display = 'none';
+  actionsEl.style.display = 'none';
+  instruction.textContent = '';
+  errorEl.style.display = 'none';
+  resultsEl.style.display = 'none';
+}
 
 fileInput.addEventListener('change', () => {
   const file = fileInput.files[0];
   if (!file) return;
-
   const reader = new FileReader();
   reader.onload = e => {
-    currentBase64 = e.target.result;
-    preview.src = currentBase64;
-    preview.style.display = 'block';
-    measureActions.style.display = 'flex';
-    errorEl.style.display = 'none';
-    resultsEl.style.display = 'none';
-    statusEl.textContent = '';
+    img = new Image();
+    img.onload = () => {
+      const maxW = Math.min(window.innerWidth - 28, 700);
+      const scale = maxW / img.width;
+      canvas.width = maxW;
+      canvas.height = img.height * scale;
+      drawScene();
+      captureBox.style.display = 'none';
+      canvasWrap.style.display = 'block';
+      actionsEl.style.display = 'flex';
+      points = [];
+      updateInstruction();
+      errorEl.style.display = 'none';
+      resultsEl.style.display = 'none';
+    };
+    img.src = e.target.result;
   };
   reader.readAsDataURL(file);
 });
 
-retakeBtn.addEventListener('click', () => {
-  fileInput.value = '';
-  preview.style.display = 'none';
-  measureActions.style.display = 'none';
+function updateInstruction() {
+  if (points.length < 4) {
+    const step = STEP_LABELS[points.length];
+    instruction.textContent = step.text;
+    instruction.className = step.cls;
+  } else {
+    instruction.textContent = '';
+    instruction.className = '';
+  }
+}
+
+function drawScene() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+  if (points[0] && points[1]) drawLine(points[0], points[1], '#4C9AD8');
+  if (points[2] && points[3]) drawLine(points[2], points[3], '#E1A24C');
+
+  points.forEach((p, i) => {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 7, 0, Math.PI * 2);
+    ctx.fillStyle = i < 2 ? '#4C9AD8' : '#E1A24C';
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#fff';
+    ctx.stroke();
+  });
+}
+
+function drawLine(a, b, color) {
+  ctx.beginPath();
+  ctx.moveTo(a.x, a.y);
+  ctx.lineTo(b.x, b.y);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 3;
+  ctx.stroke();
+}
+
+function getCanvasPoint(evt) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+  const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+  return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+}
+
+function handleTap(evt) {
+  if (points.length >= 4) return;
+  evt.preventDefault();
+  const p = getCanvasPoint(evt);
+  points.push(p);
+  drawScene();
+  updateInstruction();
+  if (points.length === 4) compute();
+}
+
+canvas.addEventListener('click', handleTap);
+canvas.addEventListener('touchstart', handleTap);
+
+undoBtn.addEventListener('click', () => {
+  points.pop();
+  drawScene();
+  updateInstruction();
   resultsEl.style.display = 'none';
   errorEl.style.display = 'none';
-  statusEl.textContent = '';
-  currentBase64 = null;
 });
 
-measureBtn.addEventListener('click', async () => {
-  if (!currentBase64) return;
-  measureBtn.disabled = true;
-  statusEl.textContent = 'Analyzing photo...';
-  errorEl.style.display = 'none';
-  resultsEl.style.display = 'none';
+retakeBtn.addEventListener('click', resetAll);
+startOverBtn.addEventListener('click', resetAll);
 
-  try {
-    const res = await fetch('/api/measure', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ image: currentBase64 }),
-    });
-    const data = await res.json();
+function dist(a, b) {
+  return Math.hypot(b.x - a.x, b.y - a.y);
+}
 
-    if (data.status !== 'success') {
-      throw new Error(data.message || 'Something went wrong analyzing the photo.');
-    }
+function halfRound(x) {
+  return Math.max(1, Math.round(x * 2) / 2);
+}
 
-    document.getElementById('resCm').textContent = data.measurements.cm + ' cm';
-    document.getElementById('resIn').textContent = data.measurements.inches + ' in';
-    document.getElementById('resUk').textContent = data.shoe_sizes.uk;
-    document.getElementById('resUsM').textContent = data.shoe_sizes.us_men;
-    document.getElementById('resUsW').textContent = data.shoe_sizes.us_women;
-    document.getElementById('resEu').textContent = data.shoe_sizes.eu;
+function compute() {
+  const cardPx = dist(points[0], points[1]);
+  const footPx = dist(points[2], points[3]);
 
-    resultsEl.style.display = 'block';
-    statusEl.textContent = '';
-  } catch (err) {
-    errorEl.textContent = err.message;
-    errorEl.style.display = 'block';
-    statusEl.textContent = '';
+  if (cardPx < 5) {
+    showError('Those two card points are too close together — try again.');
+    return;
   }
 
-  measureBtn.disabled = false;
-});
+  const pixelsPerCm = cardPx / CARD_WIDTH_CM;
+  const footCm = footPx / pixelsPerCm;
+
+  if (footCm < 10 || footCm > 40) {
+    showError(`That works out to ${footCm.toFixed(1)} cm, which looks off. Double-check your points and try again.`);
+    return;
+  }
+
+  const footIn = footCm / 2.54;
+  const usMen = (3 * footIn) - 22.0;
+  const usWomen = usMen + 1.5;
+  const uk = usMen - 1.0;
+  const eu = Math.max(16, Math.round((footCm + 1.5) * 1.5 * 2) / 2);
+
+  document.getElementById('resCm').textContent = footCm.toFixed(1) + ' cm';
+  document.getElementById('resIn').textContent = footIn.toFixed(1) + ' in';
+  document.getElementById('resUk').textContent = halfRound(uk);
+  document.getElementById('resUsM').textContent = halfRound(usMen);
+  document.getElementById('resUsW').textContent = halfRound(usWomen);
+  document.getElementById('resEu').textContent = eu;
+
+  errorEl.style.display = 'none';
+  resultsEl.style.display = 'block';
+}
+
+function showError(msg) {
+  errorEl.textContent = msg;
+  errorEl.style.display = 'block';
+  resultsEl.style.display = 'none';
+}
 </script>
 </body>
 </html>
