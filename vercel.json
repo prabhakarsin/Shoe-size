@@ -1,7 +1,0 @@
-{
-  "functions": {
-    "api/measure.py": {
-      "maxDuration": 15
-    }
-  }
-}
