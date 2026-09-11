@@ -1,7 +1,6 @@
 {
-  "version": 2,
-  "routes": [
-    { "src": "/api/(.*)", "dest": "api/$1" },
-    { "src": "/(.*)", "dest": "public/$1" }
+  "builds": [
+    { "src": "api/ask.js", "use": "@vercel/node" },
+    { "src": "api/measure.py", "use": "@vercel/python" }
   ]
 }
