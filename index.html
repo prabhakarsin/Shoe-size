@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FootMeasure — find your shoe size from a photo</title>
+<style>
+  :root{
+    --bg:#0F1115; --panel:#1A1D24; --border:#2A2E38;
+    --text:#EDEFF2; --muted:#8C97A8; --accent:#4C9AD8;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,sans-serif;
+    min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:24px 16px;
+  }
+  .wrap{max-width:520px; width:100%;}
+  h1{font-size:22px; margin:0 0 6px;}
+  .sub{color:var(--muted); font-size:14px; margin-bottom:20px; line-height:1.5;}
+
+  .steps{background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:16px 18px; margin-bottom:20px;}
+  .steps ol{margin:0; padding-left:20px; font-size:14px; line-height:1.7; color:var(--text);}
+  .steps b{color:var(--accent);}
+
+  .capture-box{
+    border:2px dashed var(--border); border-radius:12px; padding:28px 16px;
+    text-align:center; margin-bottom:16px; background:var(--panel);
+  }
+  #preview{max-width:100%; border-radius:8px; margin-top:14px; display:none;}
+
+  input[type="file"]{display:none;}
+  label.btn, button{
+    display:inline-block; background:var(--accent); color:#08111a; font-weight:600;
+    padding:12px 20px; border-radius:8px; cursor:pointer; border:none; font-size:14.5px;
+  }
+  button:disabled{opacity:0.5; cursor:not-allowed;}
+  button.secondary{background:transparent; border:1px solid var(--border); color:var(--text);}
+
+  .actions{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:14px;}
+
+  #status{font-size:13.5px; color:var(--muted); text-align:center; margin:10px 0;}
+  #error{
+    display:none; background:#2A1518; border:1px solid #5A2A2E; color:#F0A8AC;
+    border-radius:8px; padding:12px 14px; font-size:13.5px; margin-top:14px;
+  }
+
+  #results{display:none; margin-top:20px;}
+  .size-grid{
+    display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:14px;
+  }
+  .size-card{
+    background:var(--panel); border:1px solid var(--border); border-radius:10px;
+    padding:14px; text-align:center;
+  }
+  .size-card .label{font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em;}
+  .size-card .value{font-size:24px; font-weight:600; margin-top:4px;}
+  .disclaimer{font-size:12px; color:#5f6a7a; margin-top:18px; line-height:1.5;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Find your shoe size</h1>
+  <p class="sub">Take one photo and get your size estimate in cm, inches, UK, US, and EU.</p>
+
+  <div class="steps">
+    <ol>
+      <li>Place a <b>credit or debit card flat</b> on the floor next to your foot (not overlapping it).</li>
+      <li>Put your foot flat next to it, on a <b>plain, well-lit surface</b> (a sheet of paper works well).</li>
+      <li>Photograph <b>straight down from directly above</b> — not at an angle.</li>
+    </ol>
+  </div>
+
+  <div class="capture-box">
+    <label class="btn" for="fileInput">Take or choose a photo</label>
+    <input type="file" id="fileInput" accept="image/*" capture="environment">
+    <img id="preview" alt="Preview of your photo">
+    <div class="actions" id="measureActions" style="display:none;">
+      <button id="measureBtn">Measure my foot</button>
+      <button class="secondary" id="retakeBtn">Retake</button>
+    </div>
+  </div>
+
+  <div id="status"></div>
+  <div id="error"></div>
+
+  <div id="results">
+    <div class="size-grid">
+      <div class="size-card"><div class="label">Length</div><div class="value" id="resCm">--</div></div>
+      <div class="size-card"><div class="label">Inches</div><div class="value" id="resIn">--</div></div>
+      <div class="size-card"><div class="label">UK</div><div class="value" id="resUk">--</div></div>
+      <div class="size-card"><div class="label">US Men's</div><div class="value" id="resUsM">--</div></div>
+      <div class="size-card"><div class="label">US Women's</div><div class="value" id="resUsW">--</div></div>
+      <div class="size-card"><div class="label">EU</div><div class="value" id="resEu">--</div></div>
+    </div>
+  </div>
+
+  <p class="disclaimer">
+    This is an estimate based on image analysis, not a precise fitting. Sizing conventions vary
+    by brand and shoe style — when in stock, check the specific brand's size chart before buying.
+  </p>
+</div>
+
+<script>
+const fileInput = document.getElementById('fileInput');
+const preview = document.getElementById('preview');
+const measureActions = document.getElementById('measureActions');
+const measureBtn = document.getElementById('measureBtn');
+const retakeBtn = document.getElementById('retakeBtn');
+const statusEl = document.getElementById('status');
+const errorEl = document.getElementById('error');
+const resultsEl = document.getElementById('results');
+
+let currentBase64 = null;
+
+fileInput.addEventListener('change', () => {
+  const file = fileInput.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    currentBase64 = e.target.result;
+    preview.src = currentBase64;
+    preview.style.display = 'block';
+    measureActions.style.display = 'flex';
+    errorEl.style.display = 'none';
+    resultsEl.style.display = 'none';
+    statusEl.textContent = '';
+  };
+  reader.readAsDataURL(file);
+});
+
+retakeBtn.addEventListener('click', () => {
+  fileInput.value = '';
+  preview.style.display = 'none';
+  measureActions.style.display = 'none';
+  resultsEl.style.display = 'none';
+  errorEl.style.display = 'none';
+  statusEl.textContent = '';
+  currentBase64 = null;
+});
+
+measureBtn.addEventListener('click', async () => {
+  if (!currentBase64) return;
+  measureBtn.disabled = true;
+  statusEl.textContent = 'Analyzing photo...';
+  errorEl.style.display = 'none';
+  resultsEl.style.display = 'none';
+
+  try {
+    const res = await fetch('/api/measure', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: currentBase64 }),
+    });
+    const data = await res.json();
+
+    if (data.status !== 'success') {
+      throw new Error(data.message || 'Something went wrong analyzing the photo.');
+    }
+
+    document.getElementById('resCm').textContent = data.measurements.cm + ' cm';
+    document.getElementById('resIn').textContent = data.measurements.inches + ' in';
+    document.getElementById('resUk').textContent = data.shoe_sizes.uk;
+    document.getElementById('resUsM').textContent = data.shoe_sizes.us_men;
+    document.getElementById('resUsW').textContent = data.shoe_sizes.us_women;
+    document.getElementById('resEu').textContent = data.shoe_sizes.eu;
+
+    resultsEl.style.display = 'block';
+    statusEl.textContent = '';
+  } catch (err) {
+    errorEl.textContent = err.message;
+    errorEl.style.display = 'block';
+    statusEl.textContent = '';
+  }
+
+  measureBtn.disabled = false;
+});
+</script>
+</body>
+</html>
